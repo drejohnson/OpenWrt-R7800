@@ -10,8 +10,6 @@
 # Description: OpenWrt DIY script part 1 (Before Update feeds)
 #
 
-# Uncomment a feed source
-#sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
-
-# Add a feed source
-#sed -i '$a src-git lienol https://github.com/Lienol/openwrt-package' feeds.conf.default
+# WIFI is the last six digits of MAC
+rm -rf package/kernel/mac80211/files/lib/wifi/mac80211.sh
+cp -f ../mac80211.sh package/kernel/mac80211/files/lib/wifi/
