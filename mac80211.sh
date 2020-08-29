@@ -85,8 +85,8 @@ detect_mac80211() {
 
 		iw phy "$dev" info | grep -q '5180 MHz' && {
 			mode_band="a"
-			channel="36"
-			iw phy "$dev" info | grep -q 'VHT Capabilities' && htmode="VHT80"
+			channel="auto"
+			iw phy "$dev" info | grep -q 'VHT Capabilities' && htmode="VHT160"
 		}
 
 		[ -n "$htmode" ] && ht_capab="set wireless.radio${devidx}.htmode=$htmode"
@@ -111,19 +111,20 @@ detect_mac80211() {
 			set wireless.radio${devidx}.type=mac80211
 			set wireless.radio${devidx}.channel=${channel}
 			set wireless.radio${devidx}.hwmode=11${mode_band}
-			set wireless.radio${devidx}.country=CN #指定国家
-			set wireless.radio${devidx}.mu_beamformer=1 #开启MU-MIMO
+			set wireless.radio${devidx}.country=CN
+      set wireless.radio${devidx}.distance=200
+      set wireless.radio${devidx}.frag=2304
+      set wireless.radio${devidx}.rts=500
 			${dev_id}
 			${ht_capab}
 			set wireless.radio${devidx}.disabled=0
-
 			set wireless.default_radio${devidx}=wifi-iface
 			set wireless.default_radio${devidx}.device=radio${devidx}
 			set wireless.default_radio${devidx}.network=lan
 			set wireless.default_radio${devidx}.mode=ap
 			set wireless.default_radio${devidx}.ssid=R7800_$(cat /sys/class/ieee80211/${dev}/macaddress|awk -F ":" '{print $4""$5""$6 }'| tr a-z A-Z)
-			set wireless.default_radio${devidx}.encryption=psk2 #wifi加密方式，没有是none
-			set wireless.default_radio${devidx}.key=password #wifi密码
+			set wireless.default_radio${devidx}.encryption=psk2 #wifi encryption method
+			set wireless.default_radio${devidx}.key=password #wifi password
 EOF
 		uci -q commit wireless
 
