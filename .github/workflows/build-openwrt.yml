@@ -27,14 +27,11 @@ on:
 env:
   REPO_URL: https://github.com/Ansuel/openwrt
   REPO_BRANCH: kernel5.4-nss-qsdk10.0
-  FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
-  DIY_P1_SH: diy-part1.sh
-  DIY_P2_SH: diy-part2.sh
+  DIY_SH: OpenWrt-R7800.sh
   SSH_ACTIONS: false
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
-  UPLOAD_COWTRANSFER: false
   UPLOAD_WETRANSFER: false
   TZ: Asia/Shanghai
 
@@ -66,13 +63,11 @@ jobs:
         df -hT $PWD
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-
-    - name: Load custom feeds
-      run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
+        useVersionInfo=$(git show -s --date=short --format="Author: %an<br/>Date: %cd<br/>Commit: %s")
+        echo "::set-env name=useVersionInfo::$useVersionInfo"
+        echo "::set-env name=DATE::$(TZ=UTC-8 date "+%Y%m%d")"
+        echo "::set-env name=RELEASE_DATE::$(TZ=UTC-8 date "+%Y-%m-%d")"
 
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
@@ -84,9 +79,14 @@ jobs:
       run: |
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $DIY_P2_SH
+        rm -rf openwrt/package/kernel/mac80211/files/lib/wifi/mac80211.sh
+        cp -f $GITHUB_WORKSPACE/mac80211.sh openwrt/package/kernel/mac80211/files/lib/wifi/
+
+        cp -rf $GITHUB_WORKSPACE/zzz-default-settings openwrt/package/default-settings
+        git clone https://github.com/kuoruan/openwrt-v2ray.git openwrt/package/v2ray-core
+        chmod +x $DIY_SH
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
+        $GITHUB_WORKSPACE/$DIY_SH
 
     - name: SSH connection to Actions
       uses: P3TERX/debugger-action@main
