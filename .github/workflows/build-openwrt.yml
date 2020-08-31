@@ -82,7 +82,7 @@ jobs:
         rm -rf openwrt/package/kernel/mac80211/files/lib/wifi/mac80211.sh
         cp -f mac80211.sh openwrt/package/kernel/mac80211/files/lib/wifi/
 
-        cp -rf zzz-default-settings openwrt/package/default-settings
+        cp -rf default-settings openwrt/package/default-settings
         git clone https://github.com/kuoruan/openwrt-v2ray.git openwrt/package/v2ray-core
         chmod +x $DIY_SH
         cd openwrt
