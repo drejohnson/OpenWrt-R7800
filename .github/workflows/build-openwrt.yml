@@ -84,6 +84,7 @@ jobs:
 
         cp -rf default-settings openwrt/package/default-settings
         git clone https://github.com/kuoruan/openwrt-v2ray.git openwrt/package/v2ray-core
+        git clone https://github.com/jerrykuku/luci-theme-argon.git openwrt/package/luci-theme-argon
         chmod +x $DIY_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH
