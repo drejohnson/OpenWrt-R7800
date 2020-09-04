@@ -31,6 +31,7 @@ env:
   CONFIG_FILE: .config
   DIY_SH: OpenWrt-R7800.sh
   SSH_ACTIONS: false
+  GITHUB_USER_NAME: drejohnson
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_WETRANSFER: false
@@ -70,11 +71,12 @@ jobs:
         echo "::set-env name=DATE::$(TZ=UTC-8 date "+%Y%m%d")"
         echo "::set-env name=RELEASE_DATE::$(TZ=UTC-8 date "+%Y-%m-%d")"
 
-    - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
-
-    - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
+    - name: Update and install feeds
+      run: | 
+        cd openwrt
+        # echo "src-git lienol https://github.com/OpenWrt-Actions/openwrt-package-lienol" >> feeds.conf.default
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
@@ -117,19 +119,22 @@ jobs:
       if: (!cancelled())
       run: df -hT
 
-    - name: Upload bin directory
-      uses: actions/upload-artifact@main
-      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
-      with:
-        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: openwrt/bin
+    # - name: Upload bin directory
+    #   uses: actions/upload-artifact@main
+    #   if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+    #   with:
+    #     name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+    #     path: openwrt/bin
 
     - name: Organize files
       id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
         cd openwrt/bin/targets/*/*
         rm -rf packages
+        rm -rf *uImage
+        rm -rf *.manifest
+        rm -rf *.seed
         echo "::set-env name=FIRMWARE::$PWD"
         echo "::set-output name=status::success"
 
@@ -139,3 +144,37 @@ jobs:
       with:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}
+
+    - name: Generate Tag
+      id: tag
+      if: steps.compile.outputs.status == 'success' && env.CREATE_RELEASE == 'true' && !cancelled()
+      run: |
+        echo ::set-env name=RELEASE_TAG::"$(TZ=UTC-8 date +"%Y-%m-%d")"
+        echo "::set-output name=status::success"
+    
+    - name: Upload Firmware To Release
+      uses: softprops/action-gh-release@v1
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+      with:
+        name: Netgear ${{ env.BRANCH }} 🚀 | Automatic compilation / ${{ env.RELEASE_TAG }}
+        tag_name: ${{ env.RELEASE_DATE }}
+        body: |            
+            1. This firmware is automatically compiled
+            2. Only complete firmware is provided in the release
+            3. If you need a separate IPK, please download from the branch
+            4. Source Code：${{ env.REPO_URL }}
+            -- Build by ${{ env.GITHUB_USER_NAME }} @ with Github Action on ${{ env.RELEASE_DATE }}
+            🚀 Auto build           
+            ${{ env.useVersionInfo }}
+            ${{ github.event.commits[0].message }}
+        files: ${{ env.FIRMWARE }}/*
+
+
+    - name : Upload artifact
+      #working-directory: ./openwrt
+      uses: actions/upload-artifact@master
+      with:
+        name: OpenWrt
+        path: bin
