@@ -102,7 +102,7 @@ jobs:
         $GITHUB_WORKSPACE/$CUSTOMIZE_SH
 
     - name: Replace default config
-      id: package
+      id: config
       working-directory: ./openwrt
       run: |
         rm -f $CONFIG_FILE
