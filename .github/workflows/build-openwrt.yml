@@ -95,10 +95,8 @@ jobs:
       run: |
         [ -e default-settings ] && mv default-settings openwrt/package
         [ -e files ] && mv files openwrt/files
-        rm -f openwrt/$CONFIG_FILE
-        rm -f openwrt/.config
-        [ -e $CONFIG_FILE ] && mv -f $CONFIG_FILE openwrt/
-        [ -e $CONFIG_FILE_ATH10K ] && mv -f $CONFIG_FILE openwrt/
+        [ -e $CONFIG_FILE ] && mv -f $CONFIG_FILE openwrt/$CONFIG_FILE
+        [ -e $CONFIG_FILE_ATH10K ] && mv -f $CONFIG_FILE_ATH10K openwrt/$CONFIG_FILE_ATH10K
         chmod +x $CUSTOMIZE_SH
         cd openwrt
         $GITHUB_WORKSPACE/$CUSTOMIZE_SH
