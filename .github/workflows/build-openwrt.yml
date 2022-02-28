@@ -103,6 +103,8 @@ jobs:
 
     - name: Replace default config
       id: config
+      env:
+        CONFIG_FILE: 'diffconfig'
       working-directory: ./openwrt
       run: |
         rm -f $CONFIG_FILE
