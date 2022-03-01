@@ -92,9 +92,8 @@ jobs:
     - name: Remove default configs
       run:  |
         cd openwrt
-        rm -r $DIFFCONFIG
-        rm -r $DIFFCONFIG_ATH10K
-        rm -r .config
+        rm -f $DIFFCONFIG
+        rm -f $DIFFCONFIG_ATH10K
         
     - name: Load custom configuration
       env:
