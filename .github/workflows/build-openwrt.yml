@@ -23,6 +23,8 @@ on:
     - cron: 0 8 * * 5
 
 env:
+  DIFFCONFIG: 'diffconfig'
+  DIFFCONFIG_ATH10K: 'diffconfig-ath10k'
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: false
@@ -86,17 +88,22 @@ jobs:
         cd openwrt
         git clone --depth 1 https://github.com/yichya/luci-app-xray package/luci-app-xray
         git clone --depth 1 https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
+
+    - name: Remove default configs
+      run:  |
+        cd openwrt
+        rm -r $DIFFCONFIG
+        rm -r $DIFFCONFIG_ATH10K
+        rm -r .config
         
     - name: Load custom configuration
       env:
-        CONFIG_FILE: 'diffconfig'
-        CONFIG_FILE_ATH10K: 'diffconfig-ath10k'
         CUSTOMIZE_SH: 'customize.sh'
       run: |
         [ -e default-settings ] && mv default-settings openwrt/package
         [ -e files ] && mv files openwrt/files
-        [ -e $CONFIG_FILE ] && mv -f $CONFIG_FILE openwrt/$CONFIG_FILE
-        [ -e $CONFIG_FILE_ATH10K ] && mv -f $CONFIG_FILE_ATH10K openwrt/$CONFIG_FILE_ATH10K
+        [ -e $$DIFFCONFIG ] && mv -f $CONFIG_FILE openwrt
+        [ -e $$DIFFCONFIG_ATH10K ] && mv -f $CONFIG_FILE_ATH10K openwrt
         chmod +x $CUSTOMIZE_SH
         cd openwrt
         $GITHUB_WORKSPACE/$CUSTOMIZE_SH
@@ -139,7 +146,7 @@ jobs:
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        cd openwrt/bin/targets/*/*
+        cd openwrt/bin/targets/ipq806x/generic
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "::set-output name=status::success"
 
